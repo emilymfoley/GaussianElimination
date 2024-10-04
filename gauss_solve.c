@@ -10,11 +10,11 @@
 #include "gauss_solve.h"
 #include <math.h>
 
-void swap_rows(double A[], int n, int row1, int row2) { // Fixed to accept a 2D array
+void swap_rows(double A[], int n, int row1, int row2) {
     for (int i = 0; i < n; i++) {
-        double temp = A[row1][i]; // Accessing 2D array correctly
-        A[row1][i] = A[row2][i]; // Accessing 2D array correctly
-        A[row2][i] = temp; // Accessing 2D array correctly
+        double temp = A[row1 * n + i];
+        A[row1 * n + i] = A[row2 * n + i];
+        A[row2 * n + i] = temp;
     }
 }
 
@@ -39,7 +39,7 @@ void plu(int n, double A[n][n], int P[n]) {
 
         // Swap rows if necessary
         if (maxIndex != k) {
-            swap_rows(A, n, k, maxIndex); // Fixed: Pass the array directly
+            swap_rows((double *)A, n, k, maxIndex);
 
             // Swap the corresponding entries in P
             int temp = P[k];
@@ -49,9 +49,9 @@ void plu(int n, double A[n][n], int P[n]) {
 
         // Decompose into L and U
         for (int i = k + 1; i < n; i++) {
-            A[i][k] /= A[k][k]; // Compute L[i][k]
+            A[i][k] /= A[k][k];  // Compute L[i][k]
             for (int j = k + 1; j < n; j++) {
-                A[i][j] -= A[i][k] * A[k][j]; // Update U[i][j]
+                A[i][j] -= A[i][k] * A[k][j];  // Update U[i][j]
             }
         }
     }
