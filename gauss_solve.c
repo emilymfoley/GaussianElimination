@@ -9,6 +9,46 @@
 *----------------------------------------------------------------*/
 #include "gauss_solve.h"
 
+#include "gauss_solve.h"
+#include <stdio.h>
+
+void plu(int n, double A[n][n], int P[n]) {
+    for (int i = 0; i < n; i++) {
+        P[i] = i;  // Initialize permutation matrix P
+    }
+
+    for (int k = 0; k < n; k++) {
+        // Find pivot
+        int maxIndex = k;
+        for (int i = k + 1; i < n; i++) {
+            if (fabs(A[i][k]) > fabs(A[maxIndex][k])) {
+                maxIndex = i;
+            }
+        }
+        
+        // Swap rows if needed
+        if (maxIndex != k) {
+            double temp;
+            for (int j = 0; j < n; j++) {
+                temp = A[k][j];
+                A[k][j] = A[maxIndex][j];
+                A[maxIndex][j] = temp;
+            }
+            int tmpP = P[k];
+            P[k] = P[maxIndex];
+            P[maxIndex] = tmpP;
+        }
+
+        // Perform elimination
+        for (int i = k + 1; i < n; i++) {
+            A[i][k] /= A[k][k];
+            for (int j = k + 1; j < n; j++) {
+                A[i][j] -= A[i][k] * A[k][j];
+            }
+        }
+    }
+}
+
 void gauss_solve_in_place(const int n, double A[n][n], double b[n])
 {
   for(int k = 0; k < n; ++k) {
