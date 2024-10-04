@@ -15,49 +15,52 @@ gauss_library_path = './libgauss.so'
 
 import numpy as np
 
-def plu(A,use_c=False):
+def plu_python(A, use_c=False):
     """
     Perform PLU decomposition (with partial pivoting).
     
     Args:
-        A (list of lists or 2D numpy array): The matrix to decompose.
+        A (list of lists): The matrix to decompose.
+        use_c (bool): If True, use the C implementation (currently ignored).
     
     Returns:
-        P (2D numpy array): The permutation matrix.
-        L (2D numpy array): The lower triangular matrix.
-        U (2D numpy array): The upper triangular matrix.
+        P (list of integers): The permutation list.
+        L (list of lists): The lower triangular matrix.
+        U (list of lists): The upper triangular matrix.
     """
     n = len(A)
-    A = np.array(A, dtype=float)
+
+    # Initialize P as a list representing row swaps (identity initially)
+    P = list(range(n))
     
-    # Create identity matrix for P
-    P = np.eye(n)
-    # Create zero matrices for L and U
-    L = np.zeros((n, n))
-    U = np.array(A, dtype=float)  # Initialize U as a copy of A
+    # Initialize L as a zero matrix and U as a copy of A
+    L = [[0.0] * n for _ in range(n)]
+    U = [row[:] for row in A]  # Copy of A to avoid modifying the original matrix
     
     for k in range(n):
         # Partial pivoting: find the index of the row with the largest absolute value in column k
-        pivot = np.argmax(np.abs(U[k:n, k])) + k
+        pivot = max(range(k, n), key=lambda i: abs(U[i][k]))
         
         # Swap rows in U and P accordingly
-        U[[k, pivot]] = U[[pivot, k]]
-        P[[k, pivot]] = P[[pivot, k]]
+        U[k], U[pivot] = U[pivot], U[k]
+        P[k], P[pivot] = P[pivot], P[k]
         
         # Also swap the rows of L up to column k
         if k > 0:
-            L[[k, pivot], :k] = L[[pivot, k], :k]
+            L[k][:k], L[pivot][:k] = L[pivot][:k], L[k][:k]
         
         # Set the diagonal of L to 1
-        L[k, k] = 1
+        L[k][k] = 1
         
         # Perform the elimination below the pivot row
         for i in range(k + 1, n):
-            factor = U[i, k] / U[k, k]
-            L[i, k] = factor  # Store the factor in L
-            U[i, k:] -= factor * U[k, k:]
+            factor = U[i][k] / U[k][k]
+            L[i][k] = factor  # Store the factor in L
+            for j in range(k, n):
+                U[i][j] -= factor * U[k][j]
     
     return P, L, U
+
 
 def unpack(A):
     """ Extract L and U parts from A, fill with 0's and 1's """
@@ -118,6 +121,12 @@ def lu(A, use_c=False):
         return lu_c(A)
     else:
         return lu_python(A)
+        
+def plu(A, use_c=False):
+    if use_c:
+        return plu_c(A)
+    else:
+        return plu_python(A)
 
 
 
