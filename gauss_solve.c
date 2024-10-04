@@ -2,10 +2,33 @@
 #include <math.h>
 #include <stdio.h>  // For error handling
 
-#include <stdio.h>
-#include <math.h>
+// Function to check if any element satisfies a condition
+int any(double *arr, int n, double threshold) {
+    for (int i = 0; i < n; i++) {
+        if (fabs(arr[i]) < threshold) {
+            return 1;  // Found an element that satisfies the condition
+        }
+    }
+    return 0;  // No element satisfied the condition
+}
 
-// Other functions remain unchanged...
+// Function to check if all elements satisfy a condition
+int all(double *arr, int n, double threshold) {
+    for (int i = 0; i < n; i++) {
+        if (fabs(arr[i]) >= threshold) {
+            return 0;  // Found an element that does not satisfy the condition
+        }
+    }
+    return 1;  // All elements satisfied the condition
+}
+
+void swap_rows(double A[], int n, int row1, int row2) {
+    for (int i = 0; i < n; i++) {
+        double temp = A[row1 * n + i];
+        A[row1 * n + i] = A[row2 * n + i];
+        A[row2 * n + i] = temp;
+    }
+}
 
 void plu(int n, double A[n][n], int P[n]) {
     // Initialize the permutation array P as identity
@@ -52,7 +75,6 @@ void plu(int n, double A[n][n], int P[n]) {
     }
 }
 
-
 void gauss_solve_in_place(const int n, double A[n][n], double b[n]) {
     for (int k = 0; k < n; ++k) {
         // Use the any function to check for a zero pivot
@@ -73,7 +95,7 @@ void gauss_solve_in_place(const int n, double A[n][n], double b[n]) {
     
     for (int i = n - 1; i >= 0; --i) {
         // Use the any function to check for a zero division
-        if (fabs(A[i][i]) < 1e-12) {  // Check for zero in the diagonal during back-substitution
+        if (any(A[i], n, 1e-12)) {
             fprintf(stderr, "Error: Zero division encountered during back-substitution at index %d\n", i);
             return; // Return early to avoid further errors
         }
