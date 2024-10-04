@@ -22,6 +22,7 @@ int all(double *arr, int n, double threshold) {
     return 1;  // All elements satisfied the condition
 }
 
+// Function to swap two rows in a matrix
 void swap_rows(double A[], int n, int row1, int row2) {
     for (int i = 0; i < n; i++) {
         double temp = A[row1 * n + i];
@@ -95,7 +96,7 @@ void gauss_solve_in_place(const int n, double A[n][n], double b[n]) {
     
     for (int i = n - 1; i >= 0; --i) {
         // Use the any function to check for a zero division
-        if (any(A[i], n, 1e-12)) {
+        if (fabs(A[i][i]) < 1e-12) {  // Check for zero in the diagonal during back-substitution
             fprintf(stderr, "Error: Zero division encountered during back-substitution at index %d\n", i);
             return; // Return early to avoid further errors
         }
