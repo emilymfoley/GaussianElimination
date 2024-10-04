@@ -73,33 +73,42 @@ import ctypes
 # Assuming lib is already loaded as a shared library with lib = ctypes.CDLL('./libgauss.so')
 
 def plu_c(A):
+    """PA=LU decomposition using the C implementation.
+   
+    Accepts a list of lists A of floats and returns the permutation matrix P,
+    and the L and U matrices as tuples.
+    """
+    # Load the shared library
+    lib = ctypes.CDLL(gauss_library_path)
+
+    # Create a 2D array in Python and flatten it
     n = len(A)
-    
-    # Create a ctypes array for A and an integer array for P
-    A_c = (ctypes.c_double * (n * n))(*[A[i][j] for i in range(n) for j in range(n)])  # Flattened A
-    P_c = (ctypes.c_int * n)()  # Create an integer array for P
+    flat_array_2d = [item for row in A for item in row]
 
-    # Call the C function
-    lib.plu(n, A_c, P_c)
+    # Create the identity permutation array P as a 1D array
+    P_array = [i for i in range(n)]
 
-    L = [[0.0] * n for _ in range(n)]
-    U = [[0.0] * n for _ in range(n)]
+    # Convert to ctypes array
+    c_array_2d = (ctypes.c_double * len(flat_array_2d))(*flat_array_2d)
+    c_P_array = (ctypes.c_int * n)(*P_array)
 
-    # Fill L and U from A_c
-    for i in range(n):
-        for j in range(n):
-            if i < j:
-                L[i][j] = 0.0
-            elif i == j:
-                L[i][j] = 1.0  # Diagonal elements of L are 1
-            else:
-                L[i][j] = A_c[i * n + j]  # Access flattened array for L
-            U[i][j] = A_c[i * n + j]  # Access flattened array for U
+    # Define the function signature (accepting n, A, and P)
+    lib.plu.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_int))
 
-    # Convert P_c to a Python list
-    P = [P_c[i] for i in range(n)]
+    # Call the C function (pass n, A, and P)
+    lib.plu(n, c_array_2d, c_P_array)
 
-    return P, L, U
+    # Convert back to a 2D Python list of lists
+    modified_array_2d = [
+        [c_array_2d[i * n + j] for j in range(n)]
+        for i in range(n)
+    ]
+    L,U = unpack(modified_array_2d)
+    # Convert the 1D permutation array back to a permutation matrix
+    permutation_matrix = [[1 if c_P_array[i] == j else 0 for j in range(n)] for i in range(n)]
+    permutation_vector = [list(row).index(1) for row in permutation_matrix]
+    # Extract L and U parts from A, fill with 0's and 1's
+    return permutation_vector, L, U
 
 
 def unpack(A):
