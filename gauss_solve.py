@@ -15,7 +15,7 @@ gauss_library_path = './libgauss.so'
 
 import numpy as np
 
-def plu(A,use_c=True):
+def plu(A,use_c=False):
     """
     Perform PLU decomposition (with partial pivoting).
     
