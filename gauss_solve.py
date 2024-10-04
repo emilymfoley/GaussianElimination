@@ -1,21 +1,10 @@
-#----------------------------------------------------------------
-# File:     gauss_solve.py
-#----------------------------------------------------------------
-#
-# Author:   Marek Rychlik (rychlik@arizona.edu)
-# Date:     Thu Sep 26 10:38:32 2024
-# Copying:  (C) Marek Rychlik, 2020. All rights reserved.
-# 
-#----------------------------------------------------------------
-# A Python wrapper module around the C library libgauss.so
 
 import ctypes
+import numpy as np
 
 gauss_library_path = './libgauss.so'
 
-import numpy as np
-
-def plu(A,use_c=True):
+def plu(A, use_c=True):
     """
     Perform PLU decomposition (with partial pivoting).
     
@@ -34,7 +23,7 @@ def plu(A,use_c=True):
     P = np.eye(n)
     # Create zero matrices for L and U
     L = np.zeros((n, n))
-    U = np.array(A, dtype=float)  # Initialize U as a copy of A
+    U = A.copy()  # Initialize U as a copy of A
     
     for k in range(n):
         # Partial pivoting: find the index of the row with the largest absolute value in column k
@@ -55,20 +44,53 @@ def plu(A,use_c=True):
         for i in range(k + 1, n):
             factor = U[i, k] / U[k, k]
             L[i, k] = factor  # Store the factor in L
-            U[i, k:] -= factor * U[k, k:]
-    
+            U[i, k:] -= factor * U[k, k:]  # Correctly update U
+
     return P, L, U
 
 def unpack(A):
     """ Extract L and U parts from A, fill with 0's and 1's """
     n = len(A)
-    L = [[A[i][j] for j in range(i)] + [1] + [0 for j in range(i+1, n)]
-         for i in range(n)]
+    L = np.zeros((n, n))
+    U = np.zeros((n, n))
 
-    U = [[0 for j in range(i)] + [A[i][j] for j in range(i, n)]
-         for i in range(n)]
+    for i in range(n):
+        for j in range(i):
+            L[i][j] = A[i][j]  # Fill L with the lower triangular part
+        L[i][i] = 1  # Set diagonal of L to 1
+        for j in range(i, n):
+            U[i][j] = A[i][j]  # Fill U with the upper triangular part
 
     return L, U
+
+def lu_c(A):
+    """ Accepts a list of lists A of floats and
+    it returns (L, U) - the LU-decomposition as a tuple.
+    """
+    # Load the shared library
+    lib = ctypes.CDLL(gauss_library_path)
+
+    # Create a 2D array in Python and flatten it
+    n = len(A)
+    flat_array_2d = [item for row in A for item in row]
+
+    # Convert to a ctypes array
+    c_array_2d = (ctypes.c_double * len(flat_array_2d))(*flat_array_2d)
+
+    # Define the function signature
+    lib.lu_in_place.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_double))
+
+    # Modify the array in C
+    lib.lu_in_place(n, c_array_2d)
+
+    # Convert back to a 2D Python list of lists
+    modified_array_2d = [
+        [c_array_2d[i * n + j] for j in range(n)]
+        for i in range(n)
+    ]
+
+    # Extract L and U parts from A
+    return unpack(modified_array_2d)
 
 def lu_c(A):
     """ Accepts a list of lists A of floats and
