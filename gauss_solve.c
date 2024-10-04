@@ -8,6 +8,7 @@
 *
 *----------------------------------------------------------------*/
 #include "gauss_solve.h"
+#include <math.h>
 
 
 void swap_rows(double A[], int n, int row1, int row2) {
