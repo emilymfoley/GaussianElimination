@@ -1,73 +1,13 @@
+/*----------------------------------------------------------------
+* File:     gauss_solve.c
+*----------------------------------------------------------------
+*
+* Author:   Marek Rychlik (rychlik@arizona.edu)
+* Date:     Sun Sep 22 15:40:29 2024
+* Copying:  (C) Marek Rychlik, 2020. All rights reserved.
+*
+*----------------------------------------------------------------*/
 #include "gauss_solve.h"
-#include <math.h>
-#include <stdio.h>  // For error handling
-
-// Function to check if any element satisfies a condition
-int any(double *arr, int n, double threshold) {
-    for (int i = 0; i < n; i++) {
-        if (fabs(arr[i]) < threshold) {
-            return 1;  // Found an element that satisfies the condition
-        }
-    }
-    return 0;  // No element satisfied the condition
-}
-
-// Function to check if all elements satisfy a condition
-int all(double *arr, int n, double threshold) {
-    for (int i = 0; i < n; i++) {
-        if (fabs(arr[i]) >= threshold) {
-            return 0;  // Found an element that does not satisfy the condition
-        }
-    }
-    return 1;  // All elements satisfied the condition
-}
-
-void swap_rows(double A[], int n, int row1, int row2) {
-    for (int i = 0; i < n; i++) {
-        double temp = A[row1 * n + i];
-        A[row1 * n + i] = A[row2 * n + i];
-        A[row2 * n + i] = temp;
-    }
-}
-
-void plu(int n, double A[n][n], int P[n]) {
-    // Initialize the permutation array P as identity
-    for (int i = 0; i < n; i++) {
-        P[i] = i;
-    }
-
-    // Perform the PLU decomposition
-    for (int k = 0; k < n; k++) {
-        // Find the pivot (largest absolute value in the current column)
-        int maxIndex = k;
-        double maxVal = fabs(A[k][k]);
-
-        for (int i = k + 1; i < n; i++) {
-            if (fabs(A[i][k]) > maxVal) {
-                maxVal = fabs(A[i][k]);
-                maxIndex = i;
-            }
-        }
-
-        // Swap rows if necessary
-        if (maxIndex != k) {
-            swap_rows((double *)A, n, k, maxIndex);
-
-            // Swap the corresponding entries in P
-            int temp = P[k];
-            P[k] = P[maxIndex];
-            P[maxIndex] = temp;
-        }
-
-        // Decompose into L and U
-        for (int i = k + 1; i < n; i++) {
-            A[i][k] /= A[k][k];  // Compute L[i][k]
-            for (int j = k + 1; j < n; j++) {
-                A[i][j] -= A[i][k] * A[k][j];  // Update U[i][j]
-            }
-        }
-    }
-}
 
 void gauss_solve_in_place(const int n, double A[n][n], double b[n])
 {
