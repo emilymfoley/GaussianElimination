@@ -11,7 +11,8 @@
 
 import ctypes
 
-gauss_library_path = './libgauss.so'
+lib = ctypes.CDLL('/path/to/gauss_solve.so')
+
 
 import ctypes
 import numpy as np
