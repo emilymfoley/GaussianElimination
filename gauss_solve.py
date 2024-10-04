@@ -11,7 +11,7 @@
 
 import ctypes
 
-lib = './libgauss.so'
+gauss_library_path = './libgauss.so'
 
 import numpy as np
 
