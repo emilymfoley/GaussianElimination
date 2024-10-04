@@ -11,57 +11,71 @@
 #include <math.h>
 #include <stdio.h>  // For error handling
 
-void swap_rows(double A[], int n, int row1, int row2) {
-    for (int i = 0; i < n; i++) {
-        double temp = A[row1 * n + i];
-        A[row1 * n + i] = A[row2 * n + i];
-        A[row2 * n + i] = temp;
+#include<stdio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
+
+double plu(int n, double **c, int *p, double tol) {
+  int i, j, k, pivot_ind = 0, temp_ind;
+  int ii, jj;
+  double *vv=calloc(n,sizeof(double));
+  double pivot, *temp_row;
+  double temp;
+
+  for (j = 0; j < n; ++j) {
+    pivot = 0;
+    for (i = j; i < n; ++i)
+      if (fabs(c[i][j]) > fabs(pivot)) {
+        pivot = c[i][j];
+        pivot_ind = i;
+      }
+
+    temp_row = c[j];
+    c[j] = c[pivot_ind];
+    c[pivot_ind] = temp_row;
+
+    temp_ind  = p[j];
+    p[j] = p[pivot_ind];
+    p[pivot_ind] = temp_ind;
+
+    for (k = j+1; k < n; ++k) {
+      temp=c[k][j]/=c[j][j];
+      for(int q=j+1;q<n;q++){
+            c[k][q] -= temp*c[j][q];
+          }
     }
+    for(int q=0;q<n;q++){
+      for(int l=0;l<n;l++){
+        printf("%lf ",c[q][l]);
+      }
+      printf("\n");
+    }
+
+  }
+  return 0.;
 }
 
-void plu(int n, double A[n][n], int P[n]) {
-    // Initialize the permutation array P as identity
-    for (int i = 0; i < n; i++) {
-        P[i] = i;
-    }
+int main() {
+  double **x;
+  x=calloc(3,sizeof(double));
+  for(int i=0;i<3;i++){
+    x[i]=calloc(3,sizeof(double));
+  }
+  memcpy(x[0],(double[]){1,2,3},3*sizeof(double));
+  memcpy(x[1],(double[]){4,5,6},3*sizeof(double));
+  memcpy(x[2],(double[]){7,8,9},3*sizeof(double));
 
-    // Perform the PLU decomposition
-    for (int k = 0; k < n; k++) {
-        // Find the pivot (largest absolute value in the current column)
-        int maxIndex = k;
-        double maxVal = fabs(A[k][k]);
+  int *p=calloc(3,sizeof(int));
+  memcpy(p,(int[]){0,1,2},3*sizeof(int));
+  plupmc(3,x,p,1);
+  for(int i=0;i<3;i++){
+    free(x[i]);
+  }
+  free(p);
+  free(x);
 
-        for (int i = k + 1; i < n; i++) {
-            if (fabs(A[i][k]) > maxVal) {
-                maxVal = fabs(A[i][k]);
-                maxIndex = i;
-            }
-        }
 
-        // Swap rows if necessary
-        if (maxIndex != k) {
-            swap_rows((double *)A, n, k, maxIndex);
-
-            // Swap the corresponding entries in P
-            int temp = P[k];
-            P[k] = P[maxIndex];
-            P[maxIndex] = temp;
-        }
-
-        // Check for zero pivot element to avoid division by zero
-        if (fabs(A[k][k]) < 1e-12) {
-            fprintf(stderr, "Error: Zero pivot encountered at index %d\n", k);
-            return; // Return early to avoid further errors
-        }
-
-        // Decompose into L and U
-        for (int i = k + 1; i < n; i++) {
-            A[i][k] /= A[k][k];  // Compute L[i][k]
-            for (int j = k + 1; j < n; j++) {
-                A[i][j] -= A[i][k] * A[k][j];  // Update U[i][j]
-            }
-        }
-    }
 }
 
 void gauss_solve_in_place(const int n, double A[n][n], double b[n]) {
