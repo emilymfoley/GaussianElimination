@@ -68,16 +68,20 @@ except OSError as e:
     print(f"Error loading the shared library: {e}")
     raise
 
+import ctypes
+
+# Assuming lib is already loaded as a shared library with lib = ctypes.CDLL('./libgauss.so')
+
 def plu_c(A):
     n = len(A)
-    # Create an array of double for A and an integer array for P
+    
+    # Create a ctypes array for A and an integer array for P
     A_c = (ctypes.c_double * (n * n))(*[A[i][j] for i in range(n) for j in range(n)])  # Flattened A
     P_c = (ctypes.c_int * n)()  # Create an integer array for P
 
     # Call the C function
     lib.plu(n, A_c, P_c)
 
-    # Convert the results back to Python lists
     L = [[0.0] * n for _ in range(n)]
     U = [[0.0] * n for _ in range(n)]
 
@@ -87,9 +91,9 @@ def plu_c(A):
             if i < j:
                 L[i][j] = 0.0
             elif i == j:
-                L[i][j] = 1.0
+                L[i][j] = 1.0  # Diagonal elements of L are 1
             else:
-                L[i][j] = A_c[i * n + j]  # Access flattened array
+                L[i][j] = A_c[i * n + j]  # Access flattened array for L
             U[i][j] = A_c[i * n + j]  # Access flattened array for U
 
     # Convert P_c to a Python list
@@ -97,11 +101,6 @@ def plu_c(A):
 
     return P, L, U
 
-def plu(A, use_c=False):
-    if use_c:
-        return plu_c(A)
-    else:
-        return plu_python(A)
 
 def unpack(A):
     """ Extract L and U parts from A, fill with 0's and 1's """
@@ -163,7 +162,7 @@ def lu(A, use_c=False):
     else:
         return lu_python(A)
         
-def plu(A, use_c=False):
+def plu(A, use_c=True):
     if use_c:
         return plu_c(A)
     else:
