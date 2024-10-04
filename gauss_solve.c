@@ -59,14 +59,14 @@ void plu(int n, double A[n][n], int P[n]) {
             P[maxIndex] = temp;
         }
 
-        // Check for zero pivot element to avoid division by zero
         if (fabs(A[k][k]) < 1e-12) {
             fprintf(stderr, "Error: Zero pivot encountered at index %d\n", k);
-            return; // Return early to avoid further errors
+            return; 
         }
 
         // Decompose into L and U
         for (int i = k + 1; i < n; i++) {
+            // Use the current pivot value for the division
             A[i][k] /= A[k][k];  // Compute L[i][k]
             for (int j = k + 1; j < n; j++) {
                 A[i][j] -= A[i][k] * A[k][j];  // Update U[i][j]
