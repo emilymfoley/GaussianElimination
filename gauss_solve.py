@@ -61,18 +61,14 @@ def plu_python(A, use_c=False):
     
     return P, L, U
 
-def plu_c(A):
-    """
-    Call the C implementation of PLU decomposition.
-    
-    Args:
-        A (list of lists): The matrix to decompose.
+# Load the shared library
+try:
+    lib = ctypes.CDLL('./libgauss.so')  # Adjust the path if needed
+except OSError as e:
+    print(f"Error loading the shared library: {e}")
+    raise
 
-    Returns:
-        P (list): The permutation vector.
-        L (list of lists): The lower triangular matrix.
-        U (list of lists): The upper triangular matrix.
-    """
+def plu_c(A):
     n = len(A)
     # Create an array of double for A and an integer array for P
     A_c = (ctypes.c_double * (n * n))(*[A[i][j] for i in range(n) for j in range(n)])  # Flattened A
@@ -82,7 +78,6 @@ def plu_c(A):
     lib.plu(n, A_c, P_c)
 
     # Convert the results back to Python lists
-    # Convert A_c back to a 2D list for L and U
     L = [[0.0] * n for _ in range(n)]
     U = [[0.0] * n for _ in range(n)]
 
@@ -102,6 +97,11 @@ def plu_c(A):
 
     return P, L, U
 
+def plu(A, use_c=False):
+    if use_c:
+        return plu_c(A)
+    else:
+        return plu_python(A)
 
 def unpack(A):
     """ Extract L and U parts from A, fill with 0's and 1's """
