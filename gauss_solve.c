@@ -8,7 +8,7 @@
 *
 *----------------------------------------------------------------*/
 #include "gauss_solve.h"
-
+#include <math.h> 
 #include "gauss_solve.h"
 #include <stdio.h>
 
