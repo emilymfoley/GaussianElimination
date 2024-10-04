@@ -1,15 +1,26 @@
-/*----------------------------------------------------------------
-* File:     gauss_solve.c
-*----------------------------------------------------------------
-*
-* Author:   Marek Rychlik (rychlik@arizona.edu)
-* Date:     Sun Sep 22 15:40:29 2024
-* Copying:  (C) Marek Rychlik, 2020. All rights reserved.
-*
-*----------------------------------------------------------------*/
 #include "gauss_solve.h"
 #include <math.h>
 #include <stdio.h>  // For error handling
+
+// Function to check if any element satisfies a condition
+int any(double *arr, int n, double threshold) {
+    for (int i = 0; i < n; i++) {
+        if (fabs(arr[i]) < threshold) {
+            return 1;  // Found an element that satisfies the condition
+        }
+    }
+    return 0;  // No element satisfied the condition
+}
+
+// Function to check if all elements satisfy a condition
+int all(double *arr, int n, double threshold) {
+    for (int i = 0; i < n; i++) {
+        if (fabs(arr[i]) >= threshold) {
+            return 0;  // Found an element that does not satisfy the condition
+        }
+    }
+    return 1;  // All elements satisfied the condition
+}
 
 void swap_rows(double A[], int n, int row1, int row2) {
     for (int i = 0; i < n; i++) {
@@ -66,6 +77,12 @@ void plu(int n, double A[n][n], int P[n]) {
 
 void gauss_solve_in_place(const int n, double A[n][n], double b[n]) {
     for (int k = 0; k < n; ++k) {
+        // Use the any function to check for a zero pivot
+        if (any(A[k], n, 1e-12)) {
+            fprintf(stderr, "Error: Zero pivot encountered at index %d\n", k);
+            return; // Return early to avoid further errors
+        }
+
         for (int i = k + 1; i < n; ++i) {
             /* Store the multiplier into A[i][k] as it would become 0 and be useless */
             A[i][k] /= A[k][k];
@@ -77,10 +94,16 @@ void gauss_solve_in_place(const int n, double A[n][n], double b[n]) {
     } /* End of Gaussian elimination, start back-substitution. */
     
     for (int i = n - 1; i >= 0; --i) {
+        // Use the any function to check for a zero division
+        if (any(A[i], n, 1e-12)) {
+            fprintf(stderr, "Error: Zero division encountered during back-substitution at index %d\n", i);
+            return; // Return early to avoid further errors
+        }
+
         for (int j = i + 1; j < n; ++j) {
             b[i] -= A[i][j] * b[j];
         }
-        b[i] /= A[i][i];
+        b[i] /= A[i][i];  // Ensure we do not divide by zero here
     } /* End of back-substitution. */
 }
 
@@ -92,14 +115,19 @@ void lu_in_place(const int n, double A[n][n]) {
                 A[k][i] -= A[k][j] * A[j][i]; 
             }
         }
+        
         for (int i = k + 1; i < n; ++i) {
             for (int j = 0; j < k; ++j) {
                 /* L[i][k] -= A[i][k] * U[j][k] */
                 A[i][k] -= A[i][j] * A[j][k]; 
             }
-            /* L[k][k] /= U[k][k] */
-            if (A[k][k] != 0) {
+            
+            // Check if A[k][k] is close to zero using the any function
+            if (!any(&A[k][k], 1, 1e-12)) {
                 A[i][k] /= A[k][k];	
+            } else {
+                fprintf(stderr, "Error: Zero division in LU decomposition at index %d\n", k);
+                return; // Return early to avoid further errors
             }
         }
     }
