@@ -61,6 +61,47 @@ def plu_python(A, use_c=False):
     
     return P, L, U
 
+def plu_c(A):
+    """
+    Call the C implementation of PLU decomposition.
+    
+    Args:
+        A (list of lists): The matrix to decompose.
+
+    Returns:
+        P (list): The permutation vector.
+        L (list of lists): The lower triangular matrix.
+        U (list of lists): The upper triangular matrix.
+    """
+    n = len(A)
+    # Create an array of double for A and an integer array for P
+    A_c = (ctypes.c_double * (n * n))(*[A[i][j] for i in range(n) for j in range(n)])  # Flattened A
+    P_c = (ctypes.c_int * n)()  # Create an integer array for P
+
+    # Call the C function
+    lib.plu(n, A_c, P_c)
+
+    # Convert the results back to Python lists
+    # Convert A_c back to a 2D list for L and U
+    L = [[0.0] * n for _ in range(n)]
+    U = [[0.0] * n for _ in range(n)]
+
+    # Fill L and U from A_c
+    for i in range(n):
+        for j in range(n):
+            if i < j:
+                L[i][j] = 0.0
+            elif i == j:
+                L[i][j] = 1.0
+            else:
+                L[i][j] = A_c[i * n + j]  # Access flattened array
+            U[i][j] = A_c[i * n + j]  # Access flattened array for U
+
+    # Convert P_c to a Python list
+    P = [P_c[i] for i in range(n)]
+
+    return P, L, U
+
 
 def unpack(A):
     """ Extract L and U parts from A, fill with 0's and 1's """
