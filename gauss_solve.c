@@ -2,45 +2,74 @@
 #include <math.h>
 #include <stdio.h>  // For error handling
 
+// Function to check if any element satisfies a condition
+int any(double *arr, int n, double threshold) {
+    for (int i = 0; i < n; i++) {
+        if (fabs(arr[i]) < threshold) {
+            return 1;  // Found an element that satisfies the condition
+        }
+    }
+    return 0;  // No element satisfied the condition
+}
+
+// Function to check if all elements satisfy a condition
+int all(double *arr, int n, double threshold) {
+    for (int i = 0; i < n; i++) {
+        if (fabs(arr[i]) >= threshold) {
+            return 0;  // Found an element that does not satisfy the condition
+        }
+    }
+    return 1;  // All elements satisfied the condition
+}
+
+void swap_rows(double A[], int n, int row1, int row2) {
+    for (int i = 0; i < n; i++) {
+        double temp = A[row1 * n + i];
+        A[row1 * n + i] = A[row2 * n + i];
+        A[row2 * n + i] = temp;
+    }
+}
+
 void plu(int n, double A[n][n], int P[n]) {
-    // Initialize P as an identity permutation
+    // Initialize the permutation array P as identity
     for (int i = 0; i < n; i++) {
         P[i] = i;
     }
 
-    // LU decomposition with partial pivoting
+    // Perform the PLU decomposition
     for (int k = 0; k < n; k++) {
-        // Find pivot
+        // Find the pivot (largest absolute value in the current column)
         int maxIndex = k;
+        double maxVal = fabs(A[k][k]);
+
         for (int i = k + 1; i < n; i++) {
-            if (fabs(A[i][k]) > fabs(A[maxIndex][k])) {
+            if (fabs(A[i][k]) > maxVal) {
+                maxVal = fabs(A[i][k]);
                 maxIndex = i;
             }
         }
 
-        // If the pivot element is zero, the matrix is singular
-        if (fabs(A[maxIndex][k]) < 1e-10) { // A small threshold to avoid floating-point precision issues
-            fprintf(stderr, "Error: Zero pivot encountered at index %d\n", k);
-            return;  // Or handle as needed (e.g., set an error code)
-        }
-
-        // Swap rows in A and P
+        // Swap rows if necessary
         if (maxIndex != k) {
-            for (int j = 0; j < n; j++) {
-                double temp = A[k][j];
-                A[k][j] = A[maxIndex][j];
-                A[maxIndex][j] = temp;
-            }
+            swap_rows((double *)A, n, k, maxIndex);
+
+            // Swap the corresponding entries in P
             int temp = P[k];
             P[k] = P[maxIndex];
             P[maxIndex] = temp;
         }
 
-        // Perform the elimination
+        // Check for zero pivot element to avoid division by zero
+        if (fabs(A[k][k]) < 1e-12) {
+            fprintf(stderr, "Error: Zero pivot encountered at index %d\n", k);
+            return; // Return early to avoid further errors
+        }
+
+        // Decompose into L and U
         for (int i = k + 1; i < n; i++) {
-            A[i][k] /= A[k][k];  // Division by pivot
+            A[i][k] /= A[k][k];  // Compute L[i][k]
             for (int j = k + 1; j < n; j++) {
-                A[i][j] -= A[i][k] * A[k][j];
+                A[i][j] -= A[i][k] * A[k][j];  // Update U[i][j]
             }
         }
     }
