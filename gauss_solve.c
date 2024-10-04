@@ -11,9 +11,13 @@
 #include <math.h>
 #include <stdio.h>  // For error handling
 
-#include <stdio.h>
-#include <stdlib.h>  // For exit function
-#include <math.h>    // For fabs function
+void swap_rows(double A[], int n, int row1, int row2) {
+    for (int i = 0; i < n; i++) {
+        double temp = A[row1 * n + i];
+        A[row1 * n + i] = A[row2 * n + i];
+        A[row2 * n + i] = temp;
+    }
+}
 
 void plu(int n, double A[n][n], int P[n]) {
     // Initialize the permutation array P as identity
@@ -21,7 +25,7 @@ void plu(int n, double A[n][n], int P[n]) {
         P[i] = i;
     }
 
-    // Perform the PLU decomposition with partial pivoting
+    // Perform the PLU decomposition
     for (int k = 0; k < n; k++) {
         // Find the pivot (largest absolute value in the current column)
         int maxIndex = k;
@@ -36,12 +40,7 @@ void plu(int n, double A[n][n], int P[n]) {
 
         // Swap rows if necessary
         if (maxIndex != k) {
-            // Swap the rows in A
-            for (int j = 0; j < n; j++) {
-                double temp = A[k][j];
-                A[k][j] = A[maxIndex][j];
-                A[maxIndex][j] = temp;
-            }
+            swap_rows((double *)A, n, k, maxIndex);
 
             // Swap the corresponding entries in P
             int temp = P[k];
@@ -52,7 +51,7 @@ void plu(int n, double A[n][n], int P[n]) {
         // Check for zero pivot element to avoid division by zero
         if (fabs(A[k][k]) < 1e-12) {
             fprintf(stderr, "Error: Zero pivot encountered at index %d\n", k);
-            exit(EXIT_FAILURE); // Exit the program if zero pivot is found
+            return; // Return early to avoid further errors
         }
 
         // Decompose into L and U
@@ -64,51 +63,6 @@ void plu(int n, double A[n][n], int P[n]) {
         }
     }
 }
-
-int main() {
-    double A[20][20] = {0}; // Initialize the matrix
-    double B[20] = {0}, X[20] = {0}, Y[20] = {0};
-    int P[20] = {0}; // Permutation array
-    int i, j, n;
-
-    // Read the order of the square matrix
-    scanf("%d", &n);
-
-    // Read matrix elements
-    for (i = 0; i < n; i++) {
-        for (j = 0; j < n; j++) {
-            scanf("%lf", &A[i][j]);
-        }
-    }
-
-    // Read the constant terms
-    for (i = 0; i < n; i++) {
-        scanf("%lf", &B[i]);
-    }
-
-    // Perform LU decomposition with partial pivoting
-    plu(n, A, P);
-
-    // Forward substitution to solve for Y
-    for (i = 0; i < n; i++) {
-        Y[i] = B[P[i]]; // Use the permutation array
-        for (j = 0; j < i; j++) {
-            Y[i] -= A[i][j] * Y[j];
-        }
-    }
-
-    // Back substitution to solve for X
-    for (i = n - 1; i >= 0; i--) {
-        X[i] = Y[i];
-        for (j = i + 1; j < n; j++) {
-            X[i] -= A[i][j] * X[j];
-        }
-        X[i] /= A[i][i]; // Avoid division by zero
-    }
-
-    return 0; // Standard return for main
-}
-
 
 void gauss_solve_in_place(const int n, double A[n][n], double b[n]) {
     for (int k = 0; k < n; ++k) {
