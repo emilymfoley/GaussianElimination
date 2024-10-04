@@ -10,12 +10,11 @@
 # A Python wrapper module around the C library libgauss.so
 
 import ctypes
+import numpy as np
 
 gauss_library_path = './libgauss.so'
 
-import numpy as np
-
-def plu(A,use_c=True):
+def plu(A, use_c=True):
     """
     Perform PLU decomposition (with partial pivoting).
     
@@ -55,7 +54,8 @@ def plu(A,use_c=True):
         for i in range(k + 1, n):
             factor = U[i, k] / U[k, k]
             L[i, k] = factor  # Store the factor in L
-            U[i, k:] -= factor * U[k, k:]
+            U[i, k:] -= factor * U[k, k:]  # Ensure proper broadcasting
+            U[i, k] = 0  # Explicitly set the element to 0 after updating
     
     return P, L, U
 
@@ -87,7 +87,7 @@ def lu_c(A):
     # Define the function signature
     lib.lu_in_place.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_double))
 
-    # Modify the array in C (e.g., add 10 to each element)
+    # Modify the array in C
     lib.lu_in_place(n, c_array_2d)
 
     # Convert back to a 2D Python list of lists
@@ -102,16 +102,15 @@ def lu_c(A):
 def lu_python(A):
     n = len(A)
     for k in range(n):
-        for i in range(k,n):
+        for i in range(k, n):
             for j in range(k):
-                A[k][i] -= A[k][j] * A[j][i]
-        for i in range(k+1, n):
+                A[i][j] -= A[k][j] * A[i][k]  # Corrected the operation here
+        for i in range(k + 1, n):
             for j in range(k):
                 A[i][k] -= A[i][j] * A[j][k]
             A[i][k] /= A[k][k]
 
     return unpack(A)
-
 
 def lu(A, use_c=False):
     if use_c:
@@ -119,10 +118,7 @@ def lu(A, use_c=False):
     else:
         return lu_python(A)
 
-
-
 if __name__ == "__main__":
-
     def get_A():
         """ Make a test matrix """
         A = [[2.0, 3.0, -1.0],
@@ -131,8 +127,8 @@ if __name__ == "__main__":
         return A
 
     A = get_A()
-
-    L, U = lu(A, use_c = False)
+    
+    L, U = lu(A, use_c=False)
     print(L)
     print(U)
 
