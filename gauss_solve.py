@@ -13,6 +13,76 @@ import ctypes
 
 gauss_library_path = './libgauss.so'
 
+import ctypes
+import numpy as np
+
+# Load the shared library (e.g., gauss_solve.so)
+lib = ctypes.CDLL('./gauss_solve.so')
+
+# Function signature in the shared C library
+lib.plu.argtypes = [ctypes.c_int, np.ctypeslib.ndpointer(dtype=np.float64, ndim=2, flags='C_CONTIGUOUS'), 
+                    np.ctypeslib.ndpointer(dtype=np.int32, ndim=1, flags='C_CONTIGUOUS')]
+
+def plu(A, use_c=False):
+    n = len(A)
+    A = np.array(A, dtype=np.float64)
+
+    if use_c:
+        # C implementation
+        P = np.arange(n, dtype=np.int32)
+        lib.plu(n, A, P)
+        L = np.tril(A, -1) + np.eye(n)
+        U = np.triu(A)
+        return P.tolist(), L.tolist(), U.tolist()
+    else:
+        # Python implementation
+        P = list(range(n))
+        L = [[0.0] * n for _ in range(n)]
+        U = [[0.0] * n for _ in range(n)]
+        
+        for k in range(n):
+            # Find pivot
+            pivot = max(range(k, n), key=lambda i: abs(A[i][k]))
+            if pivot != k:
+                A[k], A[pivot] = A[pivot], A[k]
+                P[k], P[pivot] = P[pivot], P[k]
+
+            for i in range(k+1, n):
+                A[i][k] /= A[k][k]
+                for j in range(k+1, n):
+                    A[i][j] -= A[i][k] * A[k][j]
+
+        for i in range(n):
+            for j in range(n):
+                if i > j:
+                    L[i][j] = A[i][j]
+                elif i == j:
+                    L[i][j] = 1.0
+                else:
+                    U[i][j] = A[i][j]
+
+        return P, L, U
+
+# Test usage
+A = [[2.0, 3.0, -1.0],
+     [4.0, 1.0, 2.0],
+     [-2.0, 7.0, 2.0]]
+
+use_c = False
+P, L, U = plu(A, use_c=use_c)
+print("Python PLU:")
+print("P:", P)
+print("L:", L)
+print("U:", U)
+
+use_c = True
+P, L, U = plu(A, use_c=use_c)
+print("C PLU:")
+print("P:", P)
+print("L:", L)
+print("U:", U)
+
+
 def unpack(A):
     """ Extract L and U parts from A, fill with 0's and 1's """
     n = len(A)
