@@ -10,7 +10,7 @@
 #include "gauss_solve.h"
 #include <math.h>
 
-void swap_rows(double A[], int n, int row1, int row2) {
+void swap_rows(double A[n][n], int n, int row1, int row2) {
     for (int i = 0; i < n; i++) {
         double temp = A[row1 * n + i];
         A[row1 * n + i] = A[row2 * n + i];
