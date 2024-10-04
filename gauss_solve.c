@@ -2,34 +2,10 @@
 #include <math.h>
 #include <stdio.h>  // For error handling
 
-// Function to check if any element satisfies a condition
-int any(double *arr, int n, double threshold) {
-    for (int i = 0; i < n; i++) {
-        if (fabs(arr[i]) < threshold) {
-            return 1;  // Found an element that satisfies the condition
-        }
-    }
-    return 0;  // No element satisfied the condition
-}
+#include <stdio.h>
+#include <math.h>
 
-// Function to check if all elements satisfy a condition
-int all(double *arr, int n, double threshold) {
-    for (int i = 0; i < n; i++) {
-        if (fabs(arr[i]) >= threshold) {
-            return 0;  // Found an element that does not satisfy the condition
-        }
-    }
-    return 1;  // All elements satisfied the condition
-}
-
-// Function to swap two rows in a matrix
-void swap_rows(double A[], int n, int row1, int row2) {
-    for (int i = 0; i < n; i++) {
-        double temp = A[row1 * n + i];
-        A[row1 * n + i] = A[row2 * n + i];
-        A[row2 * n + i] = temp;
-    }
-}
+// Other functions remain unchanged...
 
 void plu(int n, double A[n][n], int P[n]) {
     // Initialize the permutation array P as identity
@@ -75,6 +51,7 @@ void plu(int n, double A[n][n], int P[n]) {
         }
     }
 }
+
 
 void gauss_solve_in_place(const int n, double A[n][n], double b[n]) {
     for (int k = 0; k < n; ++k) {
